@@ -83,7 +83,7 @@ JWT_SECRET=your-super-secret-jwt-key-change-in-production-min-32-chars
 SPRING_PROFILES_ACTIVE=dev
 EOF
 
-mvn spring-boot:run   # 本地开发，默认 http://localhost:8080
+mvn spring-boot:run   # 本地开发，默认 http://localhost:8000
 ```
 
 生产构建与启动
@@ -98,7 +98,7 @@ java -jar target/halolight-api-java-1.0.0.jar
 | 变量名 | 说明 | 默认值 |
 |--------|------|--------|
 | `SPRING_PROFILES_ACTIVE` | 运行环境 | `dev` |
-| `PORT` | 服务端口 | `8080` |
+| `PORT` | 服务端口 | `8000` |
 | `DATABASE_URL` | PostgreSQL 数据库连接 | `jdbc:postgresql://localhost:5432/halolight` |
 | `DATABASE_USERNAME` | 数据库用户名 | `postgres` |
 | `DATABASE_PASSWORD` | 数据库密码 | `postgres` |
@@ -112,7 +112,7 @@ java -jar target/halolight-api-java-1.0.0.jar
 ```bash
 # .env 示例
 SPRING_PROFILES_ACTIVE=prod
-PORT=8080
+PORT=8000
 DATABASE_URL=jdbc:postgresql://your-host:5432/halolight_db?sslmode=require
 DATABASE_USERNAME=your_username
 DATABASE_PASSWORD=your_password
@@ -203,7 +203,7 @@ docker-compose down
 
 ```bash
 docker build -t halolight-api-java .
-docker run -p 8080:8080 --env-file .env halolight-api-java
+docker run -p 8000:8000 --env-file .env halolight-api-java
 ```
 
 ### 自托管部署

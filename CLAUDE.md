@@ -24,7 +24,7 @@ HaloLight API Java 是基于 Spring Boot 3.4.1 + Java 23 构建的企业级后�
 
 ```bash
 # 开发
-mvn spring-boot:run                 # 启动开发服务器（默认 http://localhost:8080）
+mvn spring-boot:run                 # 启动开发服务器（默认 http://localhost:8000）
 mvn spring-boot:run -Dspring-boot.run.profiles=prod  # 生产配置启动
 
 # 构建
@@ -130,7 +130,7 @@ src/main/java/com/halolight/
 | `JWT_REFRESH_EXPIRATION` | RefreshToken 过期时间（毫秒） | `604800000`（7天） |
 | `CORS_ALLOWED_ORIGINS` | CORS 允许源（逗号分隔） | `http://localhost:3000,http://localhost:5173` |
 | `SPRING_PROFILES_ACTIVE` | 激活的配置文件 | `dev` |
-| `PORT` | 服务端口 | `8080` |
+| `PORT` | 服务端口 | `8000` |
 
 支持 `.env` 文件配置（通过 spring-dotenv）。
 
@@ -201,8 +201,8 @@ public void clearCache() { ... }
 配置前端 API 地址：
 ```env
 # Next.js
-NEXT_PUBLIC_API_URL=http://localhost:8080/api
+NEXT_PUBLIC_API_URL=http://localhost:8000/api
 
 # Vue/Vite
-VITE_API_URL=http://localhost:8080/api
+VITE_API_URL=http://localhost:8000/api
 ```

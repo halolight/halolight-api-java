@@ -195,7 +195,7 @@ fly logs
 
 # 检查健康端点
 fly ssh console
-wget -O- http://localhost:8080/actuator/health
+wget -O- http://localhost:8000/actuator/health
 ```
 
 ### 内存不足（OOMKilled）

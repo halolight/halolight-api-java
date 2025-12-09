@@ -25,14 +25,14 @@ services:
       postgres:
         condition: service_healthy
     environment:
-      PORT: 8080
+      PORT: 8000
       DATABASE_URL: jdbc:postgresql://postgres:5432/halolight
       DATABASE_USERNAME: postgres
       DATABASE_PASSWORD: postgres
       JWT_SECRET: halolight-secret-key-change-in-production-minimum-256-bits
       SPRING_PROFILES_ACTIVE: dev
     ports:
-      - "8080:8080"
+      - "8000:8000"
     restart: unless-stopped
 
 volumes:
