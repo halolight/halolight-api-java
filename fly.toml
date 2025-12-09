@@ -1,0 +1,81 @@
+# Fly.io configuration for HaloLight API Java
+# https://fly.io/docs/reference/configuration/
+
+app = "halolight-api-java"
+primary_region = "hkg"  # Hong Kong - change to your preferred region
+kill_signal = "SIGINT"
+kill_timeout = "5s"
+
+[build]
+  dockerfile = "Dockerfile"
+
+[env]
+  PORT = "8080"
+  # Secrets should be set via: fly secrets set KEY=VALUE
+  # Required secrets:
+  # - DATABASE_URL (format: jdbc:postgresql://host:port/dbname)
+  # - DATABASE_USERNAME
+  # - DATABASE_PASSWORD
+  # - JWT_SECRET (minimum 256 bits)
+  # Optional:
+  # - SPRING_PROFILES_ACTIVE (default: prod)
+  # - JWT_EXPIRATION (default: 86400000 - 24 hours)
+  # - JWT_REFRESH_EXPIRATION (default: 604800000 - 7 days)
+  # - CORS_ALLOWED_ORIGINS (comma-separated)
+
+[deploy]
+  strategy = "rolling"  # Zero-downtime deployment
+
+[checks]
+  [checks.health]
+    port = 8080
+    type = "http"
+    interval = "15s"
+    timeout = "5s"
+    grace_period = "30s"
+    method = "GET"
+    path = "/actuator/health"
+
+[[services]]
+  internal_port = 8080
+  protocol = "tcp"
+  processes = ["app"]
+
+  [[services.ports]]
+    port = 80
+    handlers = ["http"]
+    force_https = true  # Redirect HTTP to HTTPS
+
+  [[services.ports]]
+    port = 443
+    handlers = ["tls", "http"]
+
+  [services.concurrency]
+    type = "requests"
+    soft_limit = 20
+    hard_limit = 40
+
+  [[services.http_checks]]
+    interval = "15s"
+    grace_period = "30s"
+    method = "GET"
+    path = "/actuator/health"
+    protocol = "http"
+    timeout = "5s"
+    tls_skip_verify = false
+
+[metrics]
+  port = 8080
+  path = "/actuator/prometheus"
+
+# VM Configuration
+[vm]
+  size = "shared-cpu-1x"   # 1 shared vCPU
+  memory_mb = 1024          # 1024 MB RAM (increased for Spring Boot + JPA)
+
+# Auto-scaling Configuration
+[machines]
+  auto_start_machines = true   # Auto-start machines when traffic arrives
+  auto_stop_machines = true    # Auto-stop machines when idle (cost optimization)
+  min_machines_running = 2     # Set to 2 for true zero-downtime during deploys
+  # max_machines_running = 5   # Uncomment to limit max instances

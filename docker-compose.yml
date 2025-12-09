@@ -25,6 +25,7 @@ services:
       postgres:
         condition: service_healthy
     environment:
+      PORT: 8080
       DATABASE_URL: jdbc:postgresql://postgres:5432/halolight
       DATABASE_USERNAME: postgres
       DATABASE_PASSWORD: postgres
