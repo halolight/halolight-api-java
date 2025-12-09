@@ -1,81 +1,35 @@
-# Fly.io configuration for HaloLight API Java
-# https://fly.io/docs/reference/configuration/
+# fly.toml app configuration file generated for halolight-api-java on 2025-12-09
+#
+# See https://fly.io/docs/reference/configuration/ for information about how to use this file.
+#
 
-app = "halolight-api-java"
-primary_region = "hkg"  # Hong Kong - change to your preferred region
-kill_signal = "SIGINT"
-kill_timeout = "5s"
+app = 'halolight-api-java'
+primary_region = 'hkg'
 
 [build]
   dockerfile = "Dockerfile"
 
 [env]
   PORT = "8080"
-  # Secrets should be set via: fly secrets set KEY=VALUE
-  # Required secrets:
-  # - DATABASE_URL (format: jdbc:postgresql://host:port/dbname)
-  # - DATABASE_USERNAME
-  # - DATABASE_PASSWORD
-  # - JWT_SECRET (minimum 256 bits)
-  # Optional:
-  # - SPRING_PROFILES_ACTIVE (default: prod)
-  # - JWT_EXPIRATION (default: 86400000 - 24 hours)
-  # - JWT_REFRESH_EXPIRATION (default: 604800000 - 7 days)
-  # - CORS_ALLOWED_ORIGINS (comma-separated)
 
-[deploy]
-  strategy = "rolling"  # Zero-downtime deployment
-
-[checks]
-  [checks.health]
-    port = 8080
-    type = "http"
-    interval = "15s"
-    timeout = "5s"
-    grace_period = "30s"
-    method = "GET"
-    path = "/actuator/health"
-
-[[services]]
+[http_service]
   internal_port = 8080
-  protocol = "tcp"
-  processes = ["app"]
+  force_https = true
+  auto_stop_machines = 'suspend'
+  auto_start_machines = true
+  min_machines_running = 1
+  processes = ['app']
 
-  [[services.ports]]
-    port = 80
-    handlers = ["http"]
-    force_https = true  # Redirect HTTP to HTTPS
+  # Health check configuration
+  [http_service.checks]
+    [http_service.checks.health]
+      grace_period = "10s"
+      interval = "30s"
+      method = "GET"
+      timeout = "5s"
+      path = "/actuator/health"
 
-  [[services.ports]]
-    port = 443
-    handlers = ["tls", "http"]
-
-  [services.concurrency]
-    type = "requests"
-    soft_limit = 20
-    hard_limit = 40
-
-  [[services.http_checks]]
-    interval = "15s"
-    grace_period = "30s"
-    method = "GET"
-    path = "/actuator/health"
-    protocol = "http"
-    timeout = "5s"
-    tls_skip_verify = false
-
-[metrics]
-  port = 8080
-  path = "/actuator/prometheus"
-
-# VM Configuration
-[vm]
-  size = "shared-cpu-1x"   # 1 shared vCPU
-  memory_mb = 1024          # 1024 MB RAM (increased for Spring Boot + JPA)
-
-# Auto-scaling Configuration
-[machines]
-  auto_start_machines = true   # Auto-start machines when traffic arrives
-  auto_stop_machines = true    # Auto-stop machines when idle (cost optimization)
-  min_machines_running = 2     # Set to 2 for true zero-downtime during deploys
-  # max_machines_running = 5   # Uncomment to limit max instances
+[[vm]]
+  memory = '1gb'
+  cpu_kind = 'shared'
+  cpus = 1
