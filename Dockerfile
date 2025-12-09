@@ -11,11 +11,11 @@ COPY src ./src
 RUN mvn clean package -DskipTests
 
 # Runtime stage
-FROM eclipse-temurin:23-jre-alpine
+FROM eclipse-temurin:23-jre
 WORKDIR /app
 
 # Create non-root user
-RUN addgroup -S spring && adduser -S spring -G spring
+RUN groupadd -r spring && useradd -r -g spring spring
 USER spring:spring
 
 # Copy JAR from build stage
@@ -23,7 +23,7 @@ COPY --from=build /app/target/*.jar app.jar
 
 # Health check
 HEALTHCHECK --interval=30s --timeout=3s --start-period=40s --retries=3 \
-  CMD wget --no-verbose --tries=1 --spider http://localhost:8080/actuator/health || exit 1
+  CMD curl -f http://localhost:8080/actuator/health || exit 1
 
 # Expose port
 EXPOSE 8080
