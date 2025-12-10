@@ -1,6 +1,7 @@
 package com.halolight.controller;
 
 import com.halolight.dto.ApiResponse;
+import com.halolight.security.UserPrincipal;
 import com.halolight.service.CalendarService;
 import com.halolight.web.dto.calendar.CreateEventRequest;
 import com.halolight.web.dto.calendar.EventResponse;
@@ -19,7 +20,7 @@ import org.springframework.data.web.PageableDefault;
 import org.springframework.format.annotation.DateTimeFormat;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
-import org.springframework.security.core.Authentication;
+import org.springframework.security.core.annotation.AuthenticationPrincipal;
 import org.springframework.web.bind.annotation.*;
 
 import java.time.Instant;
@@ -38,14 +39,13 @@ public class CalendarController {
     @Operation(summary = "Get all events", description = "Retrieve all calendar events for the current user with optional date range filter")
     @GetMapping
     public ResponseEntity<ApiResponse<List<EventResponse>>> getAllEvents(
-            Authentication authentication,
+            @AuthenticationPrincipal UserPrincipal user,
             @Parameter(description = "Start date (ISO-8601 format)")
             @RequestParam(required = false) @DateTimeFormat(iso = DateTimeFormat.ISO.DATE_TIME) Instant start,
             @Parameter(description = "End date (ISO-8601 format)")
             @RequestParam(required = false) @DateTimeFormat(iso = DateTimeFormat.ISO.DATE_TIME) Instant end
     ) {
-        String userId = getUserId(authentication);
-        List<EventResponse> events = calendarService.getAllEvents(userId, start, end);
+        List<EventResponse> events = calendarService.getAllEvents(user.getId(), start, end);
         return ResponseEntity.ok(ApiResponse.success(events));
     }
 
@@ -89,11 +89,10 @@ public class CalendarController {
     @Operation(summary = "Create event", description = "Create a new calendar event")
     @PostMapping
     public ResponseEntity<ApiResponse<EventResponse>> createEvent(
-            Authentication authentication,
+            @AuthenticationPrincipal UserPrincipal user,
             @Valid @RequestBody CreateEventRequest request
     ) {
-        String userId = getUserId(authentication);
-        EventResponse event = calendarService.createEvent(userId, request);
+        EventResponse event = calendarService.createEvent(user.getId(), request);
         return ResponseEntity.status(HttpStatus.CREATED)
                 .body(ApiResponse.success("Event created successfully", event));
     }
@@ -102,11 +101,10 @@ public class CalendarController {
     @PutMapping("/{id}")
     public ResponseEntity<ApiResponse<EventResponse>> updateEvent(
             @PathVariable String id,
-            Authentication authentication,
+            @AuthenticationPrincipal UserPrincipal user,
             @Valid @RequestBody UpdateEventRequest request
     ) {
-        String userId = getUserId(authentication);
-        EventResponse event = calendarService.updateEvent(id, userId, request);
+        EventResponse event = calendarService.updateEvent(id, user.getId(), request);
         return ResponseEntity.ok(ApiResponse.success("Event updated successfully", event));
     }
 
@@ -114,26 +112,24 @@ public class CalendarController {
     @DeleteMapping("/{id}")
     public ResponseEntity<ApiResponse<Void>> deleteEvent(
             @PathVariable String id,
-            Authentication authentication
+            @AuthenticationPrincipal UserPrincipal user
     ) {
-        String userId = getUserId(authentication);
-        calendarService.deleteEvent(id, userId);
+        calendarService.deleteEvent(id, user.getId());
         return ResponseEntity.ok(ApiResponse.success("Event deleted successfully", null));
     }
 
     @Operation(summary = "Batch delete events", description = "Delete multiple calendar events")
     @PostMapping("/batch-delete")
     public ResponseEntity<ApiResponse<Void>> batchDeleteEvents(
-            Authentication authentication,
+            @AuthenticationPrincipal UserPrincipal user,
             @RequestBody Map<String, List<String>> body
     ) {
-        String userId = getUserId(authentication);
         List<String> ids = body.get("ids");
         if (ids == null || ids.isEmpty()) {
             return ResponseEntity.badRequest()
                     .body(ApiResponse.error("Event IDs are required"));
         }
-        calendarService.batchDeleteEvents(ids, userId);
+        calendarService.batchDeleteEvents(ids, user.getId());
         return ResponseEntity.ok(ApiResponse.success("Events deleted successfully", null));
     }
 
@@ -141,10 +137,9 @@ public class CalendarController {
     @PatchMapping("/{id}/reschedule")
     public ResponseEntity<ApiResponse<EventResponse>> rescheduleEvent(
             @PathVariable String id,
-            Authentication authentication,
+            @AuthenticationPrincipal UserPrincipal user,
             @RequestBody Map<String, Instant> body
     ) {
-        String userId = getUserId(authentication);
         Instant newStart = body.get("start");
         Instant newEnd = body.get("end");
 
@@ -153,7 +148,7 @@ public class CalendarController {
                     .body(ApiResponse.error("Both start and end times are required"));
         }
 
-        EventResponse event = calendarService.rescheduleEvent(id, userId, newStart, newEnd);
+        EventResponse event = calendarService.rescheduleEvent(id, user.getId(), newStart, newEnd);
         return ResponseEntity.ok(ApiResponse.success("Event rescheduled successfully", event));
     }
 
@@ -161,10 +156,9 @@ public class CalendarController {
     @PostMapping("/{id}/attendees")
     public ResponseEntity<ApiResponse<EventResponse>> addAttendees(
             @PathVariable String id,
-            Authentication authentication,
+            @AuthenticationPrincipal UserPrincipal user,
             @RequestBody Map<String, List<String>> body
     ) {
-        String userId = getUserId(authentication);
         List<String> attendeeIds = body.get("attendeeIds");
 
         if (attendeeIds == null || attendeeIds.isEmpty()) {
@@ -172,7 +166,7 @@ public class CalendarController {
                     .body(ApiResponse.error("Attendee IDs are required"));
         }
 
-        EventResponse event = calendarService.addAttendees(id, userId, attendeeIds);
+        EventResponse event = calendarService.addAttendees(id, user.getId(), attendeeIds);
         return ResponseEntity.ok(ApiResponse.success("Attendees added successfully", event));
     }
 
@@ -181,10 +175,9 @@ public class CalendarController {
     public ResponseEntity<ApiResponse<EventResponse>> removeAttendee(
             @PathVariable String id,
             @PathVariable String attendeeId,
-            Authentication authentication
+            @AuthenticationPrincipal UserPrincipal user
     ) {
-        String userId = getUserId(authentication);
-        EventResponse event = calendarService.removeAttendee(id, userId, attendeeId);
+        EventResponse event = calendarService.removeAttendee(id, user.getId(), attendeeId);
         return ResponseEntity.ok(ApiResponse.success("Attendee removed successfully", event));
     }
 
@@ -197,26 +190,5 @@ public class CalendarController {
     ) {
         EventResponse event = calendarService.updateAttendeeStatus(id, userId, request.getStatus());
         return ResponseEntity.ok(ApiResponse.success("Attendee status updated successfully", event));
-    }
-
-    /**
-     * Extract user ID from authentication.
-     * This assumes the authentication principal contains user information.
-     * Adjust based on your actual security configuration.
-     */
-    private String getUserId(Authentication authentication) {
-        // For now, we'll use the username as ID
-        // TODO: Update this based on your actual UserPrincipal implementation
-        // If UserPrincipal has been updated to use String id, use:
-        // return ((UserPrincipal) authentication.getPrincipal()).getId();
-
-        // Temporary solution - assumes username is the user ID or can be resolved
-        Object principal = authentication.getPrincipal();
-        if (principal instanceof String) {
-            return (String) principal;
-        }
-        // If you have a custom UserPrincipal, cast and get ID
-        // For now, using authentication name as fallback
-        return authentication.getName();
     }
 }

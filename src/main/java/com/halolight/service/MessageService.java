@@ -130,6 +130,22 @@ public class MessageService {
         participantRepository.save(participant);
     }
 
+    @Transactional
+    public void deleteConversation(String userId, String conversationId) {
+        Conversation convo = conversationRepository.findById(conversationId)
+                .orElseThrow(() -> new EntityNotFoundException("Conversation not found"));
+        ensureParticipant(convo, userId);
+
+        // Delete all messages in the conversation
+        messageRepository.deleteByConversationId(conversationId);
+
+        // Delete all participants
+        participantRepository.deleteByIdConversationId(conversationId);
+
+        // Delete the conversation itself
+        conversationRepository.delete(convo);
+    }
+
     private void ensureParticipant(Conversation convo, String userId) {
         boolean isParticipant = convo.getParticipants().stream().anyMatch(p -> p.getUser().getId().equals(userId));
         if (!isParticipant) {

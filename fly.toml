@@ -1,34 +1,29 @@
-# fly.toml app configuration file generated for halolight-api-java on 2025-12-09
-#
-# See https://fly.io/docs/reference/configuration/ for information about how to use this file.
-#
-
-app = 'halolight-api-java'
-primary_region = 'hkg'
+app = "halolight-api-java"
+primary_region = "sjc"
 
 [build]
-  dockerfile = "Dockerfile"
 
 [env]
-  PORT = "8000"
+PORT = "8000"
+SPRING_PROFILES_ACTIVE = "prod"
 
 [http_service]
-  internal_port = 8000
-  force_https = true
-  auto_stop_machines = 'suspend'
-  auto_start_machines = true
-  min_machines_running = 1
-  processes = ['app']
+auto_start_machines = true
+auto_stop_machines = "suspend"
+force_https = true
+internal_port = 8000
+min_machines_running = 1
+processes = ["app"]
 
-  # Health check configuration
-  [[http_service.http_checks]]
-    grace_period = "10s"
-    interval = "30s"
-    method = "GET"
-    timeout = "5s"
-    path = "/actuator/health"
+[[http_service.checks]]
+grace_period = "60s"
+interval = "30s"
+method = "GET"
+path = "/actuator/health"
+protocol = "http"
+timeout = "10s"
 
 [[vm]]
-  memory = '1gb'
-  cpu_kind = 'shared'
-  cpus = 1
+cpu_kind = "shared"
+cpus = 1
+memory = "1gb"

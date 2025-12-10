@@ -1,6 +1,7 @@
 package com.halolight.controller;
 
 import com.halolight.dto.ApiResponse;
+import com.halolight.security.UserPrincipal;
 import com.halolight.service.FolderService;
 import com.halolight.web.dto.folder.CreateFolderRequest;
 import com.halolight.web.dto.folder.FolderResponse;
@@ -13,7 +14,7 @@ import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
-import org.springframework.security.core.Authentication;
+import org.springframework.security.core.annotation.AuthenticationPrincipal;
 import org.springframework.web.bind.annotation.*;
 
 import java.util.List;
@@ -34,11 +35,10 @@ public class FolderController {
     @Operation(summary = "Create folder", description = "Create a new folder")
     @PostMapping
     public ResponseEntity<ApiResponse<FolderResponse>> createFolder(
-            Authentication authentication,
+            @AuthenticationPrincipal UserPrincipal user,
             @Valid @RequestBody CreateFolderRequest request
     ) {
-        String userId = getUserId(authentication);
-        FolderResponse folder = folderService.createFolder(userId, request);
+        FolderResponse folder = folderService.createFolder(user.getId(), request);
         return ResponseEntity.status(HttpStatus.CREATED)
                 .body(ApiResponse.success("Folder created successfully", folder));
     }
@@ -46,11 +46,10 @@ public class FolderController {
     @Operation(summary = "Get folders", description = "Get list of folders with optional parent filter")
     @GetMapping
     public ResponseEntity<ApiResponse<List<FolderResponse>>> getFolders(
-            Authentication authentication,
+            @AuthenticationPrincipal UserPrincipal user,
             @Parameter(description = "Parent folder ID") @RequestParam(required = false) String parentId
     ) {
-        String userId = getUserId(authentication);
-        List<FolderResponse> folders = folderService.getFolders(userId, parentId);
+        List<FolderResponse> folders = folderService.getFolders(user.getId(), parentId);
         return ResponseEntity.ok(ApiResponse.success(folders));
     }
 
@@ -58,10 +57,9 @@ public class FolderController {
     @GetMapping("/{id}")
     public ResponseEntity<ApiResponse<FolderResponse>> getFolderById(
             @PathVariable String id,
-            Authentication authentication
+            @AuthenticationPrincipal UserPrincipal user
     ) {
-        String userId = getUserId(authentication);
-        FolderResponse folder = folderService.getFolderById(id, userId);
+        FolderResponse folder = folderService.getFolderById(id, user.getId());
         return ResponseEntity.ok(ApiResponse.success(folder));
     }
 
@@ -69,11 +67,10 @@ public class FolderController {
     @PutMapping("/{id}")
     public ResponseEntity<ApiResponse<FolderResponse>> updateFolder(
             @PathVariable String id,
-            Authentication authentication,
+            @AuthenticationPrincipal UserPrincipal user,
             @Valid @RequestBody UpdateFolderRequest request
     ) {
-        String userId = getUserId(authentication);
-        FolderResponse folder = folderService.updateFolder(id, userId, request);
+        FolderResponse folder = folderService.updateFolder(id, user.getId(), request);
         return ResponseEntity.ok(ApiResponse.success("Folder updated successfully", folder));
     }
 
@@ -81,10 +78,9 @@ public class FolderController {
     @PatchMapping("/{id}")
     public ResponseEntity<ApiResponse<FolderResponse>> renameFolder(
             @PathVariable String id,
-            Authentication authentication,
+            @AuthenticationPrincipal UserPrincipal user,
             @RequestBody Map<String, String> body
     ) {
-        String userId = getUserId(authentication);
         String newName = body.get("name");
 
         if (newName == null || newName.trim().isEmpty()) {
@@ -92,7 +88,7 @@ public class FolderController {
                     .body(ApiResponse.error("Folder name cannot be blank"));
         }
 
-        FolderResponse folder = folderService.renameFolder(id, userId, newName);
+        FolderResponse folder = folderService.renameFolder(id, user.getId(), newName);
         return ResponseEntity.ok(ApiResponse.success("Folder renamed successfully", folder));
     }
 
@@ -100,31 +96,18 @@ public class FolderController {
     @DeleteMapping("/{id}")
     public ResponseEntity<ApiResponse<Void>> deleteFolder(
             @PathVariable String id,
-            Authentication authentication
+            @AuthenticationPrincipal UserPrincipal user
     ) {
-        String userId = getUserId(authentication);
-        folderService.deleteFolder(id, userId);
+        folderService.deleteFolder(id, user.getId());
         return ResponseEntity.ok(ApiResponse.success("Folder deleted successfully", null));
     }
 
     @Operation(summary = "Get folder tree", description = "Get hierarchical folder tree structure")
     @GetMapping("/tree")
     public ResponseEntity<ApiResponse<List<FolderService.FolderTreeNode>>> getFolderTree(
-            Authentication authentication
+            @AuthenticationPrincipal UserPrincipal user
     ) {
-        String userId = getUserId(authentication);
-        List<FolderService.FolderTreeNode> tree = folderService.getFolderTree(userId);
+        List<FolderService.FolderTreeNode> tree = folderService.getFolderTree(user.getId());
         return ResponseEntity.ok(ApiResponse.success(tree));
-    }
-
-    /**
-     * Extract user ID from authentication
-     */
-    private String getUserId(Authentication authentication) {
-        Object principal = authentication.getPrincipal();
-        if (principal instanceof String) {
-            return (String) principal;
-        }
-        return authentication.getName();
     }
 }

@@ -1,6 +1,7 @@
 package com.halolight.controller;
 
 import com.halolight.dto.ApiResponse;
+import com.halolight.security.UserPrincipal;
 import com.halolight.service.TeamService;
 import com.halolight.web.dto.team.AddMemberRequest;
 import com.halolight.web.dto.team.CreateTeamRequest;
@@ -19,7 +20,7 @@ import org.springframework.data.domain.Sort;
 import org.springframework.data.web.PageableDefault;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
-import org.springframework.security.core.Authentication;
+import org.springframework.security.core.annotation.AuthenticationPrincipal;
 import org.springframework.web.bind.annotation.*;
 
 import java.util.List;
@@ -39,10 +40,9 @@ public class TeamController {
     )
     @GetMapping("/my-teams")
     public ResponseEntity<ApiResponse<List<TeamResponse>>> getUserTeams(
-            Authentication authentication
+            @AuthenticationPrincipal UserPrincipal user
     ) {
-        String userId = getUserId(authentication);
-        List<TeamResponse> teams = teamService.getUserTeams(userId);
+        List<TeamResponse> teams = teamService.getUserTeams(user.getId());
         return ResponseEntity.ok(ApiResponse.success(teams));
     }
 
@@ -78,11 +78,10 @@ public class TeamController {
     )
     @PostMapping
     public ResponseEntity<ApiResponse<TeamResponse>> createTeam(
-            Authentication authentication,
+            @AuthenticationPrincipal UserPrincipal user,
             @Valid @RequestBody CreateTeamRequest request
     ) {
-        String userId = getUserId(authentication);
-        TeamResponse team = teamService.createTeam(userId, request);
+        TeamResponse team = teamService.createTeam(user.getId(), request);
         return ResponseEntity.status(HttpStatus.CREATED)
                 .body(ApiResponse.success("Team created successfully", team));
     }
@@ -94,11 +93,10 @@ public class TeamController {
     @PutMapping("/{id}")
     public ResponseEntity<ApiResponse<TeamResponse>> updateTeam(
             @Parameter(description = "Team ID") @PathVariable String id,
-            Authentication authentication,
+            @AuthenticationPrincipal UserPrincipal user,
             @Valid @RequestBody UpdateTeamRequest request
     ) {
-        String userId = getUserId(authentication);
-        TeamResponse team = teamService.updateTeam(id, userId, request);
+        TeamResponse team = teamService.updateTeam(id, user.getId(), request);
         return ResponseEntity.ok(ApiResponse.success("Team updated successfully", team));
     }
 
@@ -109,10 +107,9 @@ public class TeamController {
     @DeleteMapping("/{id}")
     public ResponseEntity<ApiResponse<Void>> deleteTeam(
             @Parameter(description = "Team ID") @PathVariable String id,
-            Authentication authentication
+            @AuthenticationPrincipal UserPrincipal user
     ) {
-        String userId = getUserId(authentication);
-        teamService.deleteTeam(id, userId);
+        teamService.deleteTeam(id, user.getId());
         return ResponseEntity.ok(ApiResponse.success("Team deleted successfully", null));
     }
 
@@ -123,11 +120,10 @@ public class TeamController {
     @PostMapping("/{id}/members")
     public ResponseEntity<ApiResponse<TeamResponse>> addMember(
             @Parameter(description = "Team ID") @PathVariable String id,
-            Authentication authentication,
+            @AuthenticationPrincipal UserPrincipal user,
             @Valid @RequestBody AddMemberRequest request
     ) {
-        String userId = getUserId(authentication);
-        TeamResponse team = teamService.addMember(id, userId, request);
+        TeamResponse team = teamService.addMember(id, user.getId(), request);
         return ResponseEntity.status(HttpStatus.CREATED)
                 .body(ApiResponse.success("Member added successfully", team));
     }
@@ -140,10 +136,9 @@ public class TeamController {
     public ResponseEntity<ApiResponse<TeamResponse>> removeMember(
             @Parameter(description = "Team ID") @PathVariable String id,
             @Parameter(description = "User ID to remove") @PathVariable String userId,
-            Authentication authentication
+            @AuthenticationPrincipal UserPrincipal user
     ) {
-        String requesterId = getUserId(authentication);
-        TeamResponse team = teamService.removeMember(id, requesterId, userId);
+        TeamResponse team = teamService.removeMember(id, user.getId(), userId);
         return ResponseEntity.ok(ApiResponse.success("Member removed successfully", team));
     }
 
@@ -155,11 +150,10 @@ public class TeamController {
     public ResponseEntity<ApiResponse<TeamResponse>> updateMemberRole(
             @Parameter(description = "Team ID") @PathVariable String id,
             @Parameter(description = "User ID") @PathVariable String userId,
-            Authentication authentication,
+            @AuthenticationPrincipal UserPrincipal user,
             @Valid @RequestBody UpdateMemberRoleRequest request
     ) {
-        String requesterId = getUserId(authentication);
-        TeamResponse team = teamService.updateMemberRole(id, requesterId, userId, request);
+        TeamResponse team = teamService.updateMemberRole(id, user.getId(), userId, request);
         return ResponseEntity.ok(ApiResponse.success("Member role updated successfully", team));
     }
 
@@ -173,26 +167,5 @@ public class TeamController {
     ) {
         TeamService.TeamStatsResponse stats = teamService.getTeamStats(id);
         return ResponseEntity.ok(ApiResponse.success(stats));
-    }
-
-    /**
-     * Extract user ID from authentication.
-     * This assumes the authentication principal contains user information.
-     * Adjust based on your actual security configuration.
-     */
-    private String getUserId(Authentication authentication) {
-        // For now, we'll use the username as ID
-        // TODO: Update this based on your actual UserPrincipal implementation
-        // If UserPrincipal has been updated to use String id, use:
-        // return ((UserPrincipal) authentication.getPrincipal()).getId();
-
-        // Temporary solution - assumes username is the user ID or can be resolved
-        Object principal = authentication.getPrincipal();
-        if (principal instanceof String) {
-            return (String) principal;
-        }
-        // If you have a custom UserPrincipal, cast and get ID
-        // For now, using authentication name as fallback
-        return authentication.getName();
     }
 }
