@@ -346,9 +346,9 @@ public class TeamService {
                 .roleId(member.getRoleId())
                 .joinedAt(member.getJoinedAt());
 
-        // Add role name if role exists
-        if (member.getRole() != null) {
-            builder.roleName(member.getRole().getName());
+        // Add role name based on roleId (team role, not system role)
+        if (member.getRoleId() != null) {
+            builder.roleName(member.getRoleId());
         }
 
         return builder.build();

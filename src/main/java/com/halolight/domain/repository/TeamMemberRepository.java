@@ -20,7 +20,7 @@ public interface TeamMemberRepository extends JpaRepository<TeamMember, TeamMemb
 
     void deleteByIdTeamIdAndIdUserId(String teamId, String userId);
 
-    @Query("SELECT tm FROM TeamMember tm WHERE tm.team.id = :teamId AND tm.role.id = :roleId")
+    @Query("SELECT tm FROM TeamMember tm WHERE tm.team.id = :teamId AND tm.roleId = :roleId")
     List<TeamMember> findByTeamIdAndRoleId(@Param("teamId") String teamId, @Param("roleId") String roleId);
 
     long countByIdTeamId(String teamId);

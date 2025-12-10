@@ -50,10 +50,6 @@ public class Role {
     @Builder.Default
     private Set<UserRole> users = new LinkedHashSet<>();
 
-    @OneToMany(mappedBy = "role")
-    @Builder.Default
-    private Set<TeamMember> teamMembers = new LinkedHashSet<>();
-
     @PrePersist
     public void prePersist() {
         if (this.id == null) {

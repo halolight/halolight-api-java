@@ -24,6 +24,10 @@ public class TeamMember {
     @Builder.Default
     private TeamMemberId id = new TeamMemberId();
 
+    /**
+     * 团队内角色：owner, admin, member
+     * 注意：这不是系统角色（Role），而是团队内的角色标识
+     */
     @Column(name = "role_id", length = 40)
     private String roleId;
 
@@ -40,8 +44,4 @@ public class TeamMember {
     @MapsId("userId")
     @JoinColumn(name = "user_id", nullable = false)
     private User user;
-
-    @ManyToOne(fetch = FetchType.LAZY)
-    @JoinColumn(name = "role_id", insertable = false, updatable = false)
-    private Role role;
 }

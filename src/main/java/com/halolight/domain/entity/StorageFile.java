@@ -76,5 +76,14 @@ public class StorageFile {
         if (this.id == null) {
             this.id = java.util.UUID.randomUUID().toString().replace("-", "").substring(0, 25);
         }
+        if (this.ownerId == null && this.owner != null) {
+            this.ownerId = this.owner.getId();
+        }
+        if (this.folderId == null && this.folder != null) {
+            this.folderId = this.folder.getId();
+        }
+        if (this.teamId == null && this.team != null) {
+            this.teamId = this.team.getId();
+        }
     }
 }

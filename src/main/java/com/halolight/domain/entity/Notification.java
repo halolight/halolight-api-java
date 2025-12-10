@@ -62,5 +62,8 @@ public class Notification {
         if (this.id == null) {
             this.id = java.util.UUID.randomUUID().toString().replace("-", "").substring(0, 25);
         }
+        if (this.userId == null && this.user != null) {
+            this.userId = this.user.getId();
+        }
     }
 }

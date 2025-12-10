@@ -73,5 +73,8 @@ public class Team {
         if (this.id == null) {
             this.id = java.util.UUID.randomUUID().toString().replace("-", "").substring(0, 25);
         }
+        if (this.ownerId == null && this.owner != null) {
+            this.ownerId = this.owner.getId();
+        }
     }
 }

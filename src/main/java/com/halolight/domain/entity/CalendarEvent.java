@@ -87,5 +87,11 @@ public class CalendarEvent {
         if (this.id == null) {
             this.id = java.util.UUID.randomUUID().toString().replace("-", "").substring(0, 25);
         }
+        if (this.organizerId == null && this.organizer != null) {
+            this.organizerId = this.organizer.getId();
+        }
+        if (this.teamId == null && this.team != null) {
+            this.teamId = this.team.getId();
+        }
     }
 }

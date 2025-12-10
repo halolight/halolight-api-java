@@ -75,5 +75,14 @@ public class Folder {
         if (this.id == null) {
             this.id = java.util.UUID.randomUUID().toString().replace("-", "").substring(0, 25);
         }
+        if (this.ownerId == null && this.owner != null) {
+            this.ownerId = this.owner.getId();
+        }
+        if (this.parentId == null && this.parent != null) {
+            this.parentId = this.parent.getId();
+        }
+        if (this.teamId == null && this.team != null) {
+            this.teamId = this.team.getId();
+        }
     }
 }
